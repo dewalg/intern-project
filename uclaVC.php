@@ -2,6 +2,7 @@
 /*
 TO DO: 
 1. ADD VIEWING/QUERYING ABILITY 
+2. COMMENT CODE
 */
 
 require_once("permissions.php");
@@ -39,7 +40,6 @@ $data = getData($url);
 $db = container::newDBconn();
 
 try {
-	//$db = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
 	$sql = $db->prepare("INSERT INTO `ucla` (`id`, `pic`, `url`, `name`, `type`) value (:id, :pic, :url, :name, :type)");
 	foreach ($data as $user) {
 		$sql->execute($user);
