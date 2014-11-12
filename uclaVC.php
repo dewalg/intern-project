@@ -1,9 +1,15 @@
-<?php 
-/*
-TO DO: 
-1. ADD VIEWING/QUERYING ABILITY 
-2. COMMENT CODE
-*/
+<!DOCTYPE html>
+<html>
+<head>
+	<style>
+	table.db-table 		{ border-right:1px solid #ccc; border-bottom:1px solid #ccc; }
+	table.db-table th	{ background:#eee; padding:5px; border-left:1px solid #ccc; border-top:1px solid #ccc; }
+	table.db-table td	{ padding:5px; border-left:1px solid #ccc; border-top:1px solid #ccc; }
+	</style>
+</head>
+
+<body>
+<?php
 
 require_once("permissions.php");
 
@@ -45,12 +51,33 @@ try {
 		$sql->execute($user);
 	}
 	
-	echo "successfully inserted all items";
+	echo "successfully inserted all items.<br>";
 	
 } catch (PDOException $pe) {
 	die("DB ERROR: " . $pe->getMessage());
 }
 
-$db = null;
+
+//VIEW THE DATABASE CONTENTS:
+
+try {
+	$query = $db->prepare("SELECT * FROM `ucla`");
+	$query->execute();
+	
+	echo '<table cellpadding="0" cellspacing="0" class="db-table">';
+	echo '<tr><th>Id</th><th>Picture</th><th>URL</th><th>Name</th><th>User Type</th></tr>';
+	
+	foreach ($query->FetchAll() as $user) {
+		print "<tr><td>".$user['id']."</td><td><img src=\"".$user['pic']."\"></td><td>".$user['url']."</td><td>".$user['name']."</td><td>".$user['type']."</td></tr>";
+	}
+	
+	print "</table>";
+	
+
+} catch (PDOException $pe) { //if it couldn't connect
+	die("DB ERROR: " . $pe->getMessage());
+}
+
 
 ?>
+
