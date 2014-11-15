@@ -11,6 +11,10 @@
 <body>
 <?php
 
+/* TO DO:
+1. QUERY USER INFO AND ADD THAT TO DB!
+*/
+
 require_once("permissions.php");
 
 class container extends permissions {
@@ -46,7 +50,7 @@ $data = getData($url);
 $db = container::newDBconn();
 
 try {
-	$sql = $db->prepare("INSERT INTO `ucla` (`id`, `pic`, `url`, `name`, `type`) value (:id, :pic, :url, :name, :type)");
+	$sql = $db->prepare("REPLACE INTO `ucla` (`id`, `pic`, `url`, `name`, `type`) value (:id, :pic, :url, :name, :type)");
 	foreach ($data as $user) {
 		$sql->execute($user);
 	}
@@ -68,6 +72,9 @@ try {
 	echo '<tr><th>Id</th><th>Picture</th><th>URL</th><th>Name</th><th>User Type</th></tr>';
 	
 	foreach ($query->FetchAll() as $user) {
+		if ($user['pic'] == null) {
+			$user['pic'] = "http://upload.wikimedia.org/wikipedia/commons/a/ac/No_image_available.svg\" height=\"140\" width=\"140";
+		}
 		print "<tr><td>".$user['id']."</td><td><img src=\"".$user['pic']."\"></td><td>".$user['url']."</td><td>".$user['name']."</td><td>".$user['type']."</td></tr>";
 	}
 	
@@ -78,6 +85,13 @@ try {
 	die("DB ERROR: " . $pe->getMessage());
 }
 
+$db = null;
 
 ?>
 
+<FORM>
+<INPUT TYPE="button" onClick="history.go(0)" VALUE="Refresh">
+</FORM>
+
+</body>
+</html>
