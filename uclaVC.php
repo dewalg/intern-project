@@ -1,24 +1,83 @@
-<!DOCTYPE html>
 <html>
 <head>
-	<link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+	<link href='http://fonts.googleapis.com/css?family=Open+Sans:600,300' rel='stylesheet' type='text/css'>
 	<style>
-	table.db-table 		{ border-right:1px solid #ccc; border-bottom:1px solid #ccc; }
-	table.db-table th	{ background:#eee; padding:5px; border-left:1px solid #ccc; border-top:1px solid #ccc; font-family: 'Open Sans', serif; font-size:15px; }
-	table.db-table td	{ padding:5px; border-left:1px solid #ccc; border-top:1px solid #ccc; font-family: 'Open Sans', serif; font-size:10px; }
+	
+table.db-table 		
+{ 
+	border-right:1px solid #ccc; 
+	border-bottom:1px solid #ccc; 
+	border-top:1px solid #ccc; 
+}
+
+table.db-table td	
+{  
+	border-left:0px solid #ccc; border-top:1px solid #ccc; 
+	border-bottom:1px solid #ccc; 
+	font-family: 'Open Sans', serif; 
+	font-size:15px; 
+}
+
+table.db-table tr	
+{ 
+	padding:0px;
+	border-left:1px solid #ccc; 
+	border-top:1px solid #ccc; 
+	font-family: 'Open Sans', serif; 
+	font-size:10px; 
+}
+	
+table, tr, td, th
+{
+    border-collapse:collapse;
+    
+}
+body 
+{
+	font-family: 'Open Sans', serif;
+}
+	
+tr.header
+{
+	background:#eee;
+  	cursor:pointer;
+  	display: table-row;
+}
+
+tr 
+{
+    display: none;
+}
+
 	</style>
+	
+<script type='text/javascript' src='//code.jquery.com/jquery-1.9.1.js'></script>
+<script type='text/javascript'> 
+$(function(){
+	$('.header').click(function(){
+    	$(this).find('span').text(function(_, value){return value=='-'?'+':'-'});
+    	$(this).nextUntil('tr.header').slideToggle(100, function(){
+    	});
+	});
+}); 
+
+</script>
 </head>
 
 <body>
 <?php
 
-require_once("permissions.php");
+//contains information on DB access
+require_once("permissions.php"); 
 
+//use container class for maximal security (restricted access to permissions)?
 class container extends permissions {
 	
+	//static function allows for access without necessarily creating class instance
 	public static function newDBconn() {
 
-		try { //try connecting to $dbname at localhost
+		//try to connect to a DB
+		try { 
    			$db = new PDO(parent::$conn, parent::$username, parent::$password);
     
     		$db->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_WARNING);
@@ -31,6 +90,7 @@ class container extends permissions {
 	}
 }
 
+//get data from API url and parse it
 function getData($url) {
 	$raw_data = file_get_contents($url);
 	$parsed_data = json_decode($raw_data, true);
@@ -38,72 +98,10 @@ function getData($url) {
 	return $parsed_data;
 }
 
-function prepareURL() {
-	
-	if ($user['facebook_url']) {
-		$facebook = "<a href=\"".$user['facebook_url']."\">
-		<img src=\"http://img2.wikia.nocookie.net/__cb20130501121248/logopedia/images/f/fb/Facebook_icon_2013.svg\" height=\"25\" width=\"25\"></a>";
-	} else {
-		$facebook = false;
-	}
-	
-	if ($user['twitter_url']) {
-		$twitter = "<a href=\"".$user['twitter_url']."\">
-		<img src=\"https://cdn1.iconfinder.com/data/icons/simple-icons/4096/twitter-4096-black.png\" height=\"25\" width=\"25\"></a>";
-	} else {
-		$twitter = false;
-	}
-	
-	if ($user['github_url']) {	
-		$github = "<a href=\"".$user['github_url']."\">
-		<img src=\"http://fc05.deviantart.net/fs71/i/2012/223/4/3/github_flurry_ios_style_icon_by_flakshack-d5ariic.png\" height=\"25\" width=\"25\"></a>";
-	} else {
-		$github = false;
-	}
-	
-	if ($user['linkedin_url']) {	
-		$linkedin = "<a href=\"".$user['linkedin_url']."\">
-		<img src=\"https://cdn1.iconfinder.com/data/icons/simple-icons/4096/linkedin-4096-black.png\" height=\"25\" width=\"25\"></a>";
-	} else {
-		$linkedin = false;
-	}
-	
-	if ($user['dribbble_url']) {		
-		$dribbble = "<a href=\"".$user['dribbble_url']."\">
-		<img src=\"https://cdn3.iconfinder.com/data/icons/unicons-vector-icons-pack/32/dribbble-512.png\" height=\"25\" width=\"25\"></a>";
-	} else {
-		$dribbble = false;
-	}	
-	
-	if ($user['behance_url']) {	
-		$behance = "<a href=\"".$user['behance_url']."\">
-		<img src=\"https://cdn3.iconfinder.com/data/icons/picons-social/57/77-behance-512.png\" height=\"25\" width=\"25\"></a>";
-	} else {
-		$behance = false;
-	}			
-
-	$URLs = null;
-	if ($facebook) {
-		$URLs .= $facebook;
-	} else if ($twitter) {
-		$URLs .= $twitter;
-	} else if ($github) {
-		$URLs .= $github;
-	} else if ($linkedin) {
-		$URLs .= $linkedin;
-	} else if ($dribbble) {
-		$URLs .= $dribbble;
-	} else if ($behance) {
-		$URLs .= $behance;
-	} 
-
-
-	return $URLs;
-	
-}
-
+//create a new database connection
 $db = container::newDBconn();
 
+//angellist api url
 $url = "https://api.angel.co/1/search?query=ucla&type=User";
 $data = getData($url);
 
@@ -111,12 +109,17 @@ $users = array();
 $location = array();
 $skills = array();
 $roles = array();
-$i=0;
+
+$i=0; //counter 
 foreach ($data as $u) {
 	
-	$url = "https://api.angel.co/1/users/".$u['id'];
-	$users[$i] = getData($url);
+	//query the API to find more info on each user
+	$url = "https://api.angel.co/1/users/".$u['id']; 
+	$users[$i] = getData($url); //parse the data
 	
+	//put it into respective arrays
+	//use separate arrays for location, roles and skills because
+	//each user can be associated with multiple (must create relational tables in our DB)
 	foreach ($users[$i]['locations'] as $place) {
 	
 		$location[$i]['user_id'] = $users[$i]['id'];
@@ -148,6 +151,8 @@ foreach ($data as $u) {
 		
 	}
 	
+	//take them out of the main array so we can input 
+	//the data into separate tables
 	unset($users[$i]['roles']);
 	unset($users[$i]['skills']);
 	unset($users[$i]['locations']);
@@ -156,6 +161,7 @@ foreach ($data as $u) {
 }
 
 try {
+	//place the data into the users table
 	$sql = $db->prepare("REPLACE INTO `users` (`name`,
 	 `id`,
 	  `bio`,
@@ -227,28 +233,22 @@ try {
 	die("DB ERROR: " . $pe->getMessage());
 }
 
+
 //VIEW THE DATABASE CONTENTS:
+
+echo "<center><font size=8><img src=\"http://brand.ucla.edu/wp-content/uploads/2013/08/ucla-wordmark-main-1.jpg\" height=\"50\" align=CENTER><br> Tech Alumni</font><p>"; 
 
 try {
 	$query = $db->prepare("SELECT * FROM `users`");
 	$query->execute();
-	
-	echo '<table cellpadding="0" cellspacing="0" class="db-table">';
-	echo '<tr><th>Person</th><th>bio</th><th>What I\'ve Built</th><th>What I Do</th>
-		<th>Criteria</th><th>Locations</th><th>Roles</th><th>Skills</th></tr>';
 	
 	foreach ($query->FetchAll() as $user) {
 		if ($user['pic'] == null) {
 			$user['pic'] = "http://upload.wikimedia.org/wikipedia/commons/a/ac/No_image_available.svg\" height=\"140\" width=\"140";
 		}
 		
-		if ($user['investor'] == true) {
-			$user['investor'] = "(Investor)";
-		} else {
-			$user['investor'] = "";
-		}
-		
 		///////////////////////////////////
+		//URLs HANDLING: add icons
 		
 		if ($user['facebook_url']) {
 			$facebook = "<a href=\"".$user['facebook_url']."\">
@@ -294,22 +294,22 @@ try {
 
 		$URLs = null;
 		if ($facebook) {
-			$URLs .= $facebook;
+			$URLs .= $facebook." ";
 		} 
 		if ($twitter) {
-			$URLs .= $twitter;
+			$URLs .= $twitter." ";
 		} 
 		 if ($github) {
-			$URLs .= $github;
+			$URLs .= $github." ";
 		} 
 		 if ($linkedin) {
-			$URLs .= $linkedin;
+			$URLs .= $linkedin." ";
 		} 
 		 if ($dribbble) {
-			$URLs .= $dribbble;
+			$URLs .= $dribbble." ";
 		} 
 		 if ($behance) {
-			$URLs .= $behance;
+			$URLs .= $behance." ";
 		} 
 		
 		
@@ -364,7 +364,13 @@ try {
 		
 		$location_of_person = null;
 		foreach ($query->fetchAll() as $loc) {
-			$location_of_person .= $loc['display_name']."<br>";
+			$count = 0;
+			if ($count==0) {
+				$location_of_person = "<b>Located at:</b> <img src=\"https://cdn3.iconfinder.com/data/icons/unicons-vector-icons-pack/32/location-512.png\" height=\"15\" width=\"15\">".$loc['display_name'];
+			} else {
+				$location_of_person .= ", ".$loc['display_name'];
+			}
+			$count++;
 		}
 		
 		//GET SKILL ASSOCIATED WITH USER		
@@ -375,7 +381,13 @@ try {
 		
 		$skills_of_person = null;
 		foreach ($query->fetchAll() as $sk) {
-			$skills_of_person .= $sk['display_name']."<br>";
+			$count = 0;
+			if ($count==0) {
+				$skills_of_person = "<b>Skills:</b> ".$sk['display_name'];
+			} else {
+				$skills_of_person .= ", ".$sk['display_name'];
+			}
+			$count++;
 		}
 		
 		//GET ROLES ASSOCIATED WITH USER		
@@ -386,22 +398,55 @@ try {
 		
 		$roles_of_person = null;
 		foreach ($query->fetchAll() as $ro) {
-			$roles_of_person .= $ro['display_name']."<br>";
+			$count = 0;
+			if ($count==0) {
+				$roles_of_person = "<b>My Role(s):</b> ".$ro['display_name'];
+			} else {
+				$roles_of_person .= ", ".$ro['display_name'];
+			}
+			$count++;
 		}
 		
-		print "<tr><td><a href=\"".$user['angellist_url']."\">".$user['name']."</a> ".$user['investor']."<p>
-				<img src=\"".$user['image']."\"><br>User ID: ".$user['id']."<p>".$URLs."<p> Followers: ".$user['follower_count']."</td>
-				<td>".$user['bio']."<p>".$URLs2."</td>
-				<td>".$user['what_ive_built']."</td>
-				<td>".$user['what_i_do']."</td>
-				<td>".$user['criteria']."</td>
-				<td>".$location_of_person."</td>
-				<td>".$roles_of_person."</td>
-				<td>".$skills_of_person."</td>
-				</tr>";
-	}
+		//HANDLE NULL VALUES
+		if ($user['what_i_do']) {
+			$whatido = "<b>What I do:</b> ".$user['what_i_do']."<br>";
+		}
+		
+		if ($user['what_ive_built']) {
+			$whativebuilt = "<b>What I've built:</b> ".$user['what_ive_built']."<br>";
+		}
+		
+		if ($user['criteria']) {
+			$criteria = "<b>My Criteria:</b> ".$user['criteria']."<br>";
+		}
+		
+		if ($user['investor']) {
+			$investor = "I am an <b>investor</b>.";
+		}
+				
+		echo '<table cellpadding="0" cellspacing="0" class="db-table" width="80%">';
 	
-	print "</table>";
+		print "<tr class=\"header\">
+		<td><a href=\"".$user['angellist_url']."\"><img src=\"".$user['image']."\" align=LEFT a></a>
+		<font size=\"4\">".$user['name']."</font><br>".$URLs."<br><font size=\"2\">User ID: ".$user['id']."<br>
+			 <b>".$user['follower_count']."</b> followers <br>".$URLs2."</font></td>
+		</tr>
+		
+        
+		<tr><td>
+		".$whatido." <p>
+		".$whativebuilt." <p>
+		".$criteria." <p>
+		".$location_of_person."<br>
+		".$roles_of_person."<br>
+		".$skills_of_person."<p>
+		".$investor."
+		</td><br></tr>";
+		
+	
+	}
+
+	print "</table><p><font size=2>Created by Dewal Gupta</font>";
 	
 
 } catch (PDOException $pe) { //if it couldn't connect
@@ -411,10 +456,6 @@ try {
 $db = null;
 
 ?>
-
-<FORM>
-<INPUT TYPE="button" onClick="history.go(0)" VALUE="Refresh">
-</FORM>
 
 </body>
 </html>
